@@ -1,0 +1,134 @@
+<!-- list.html - All Issues -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Issues | SMART BUG</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🐛</span>
+                    <span class="logo-text">SMART BUG</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item">📊 Dashboard</a>
+                <a href="report.html" class="nav-item">➕ Report Bug</a>
+                <a href="board.html" class="nav-item">📋 Board</a>
+                <a href="list.html" class="nav-item active">📝 All Issues</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-info">
+                        <span class="user-name">Demo User</span>
+                        <span class="user-role">Tester</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="content-header">
+                <h1 class="page-title">All Issues</h1>
+                <div class="header-right">
+                    <div class="filter-group">
+                        <select id="filterPriority" class="filter-select">
+                            <option value="all">All Priorities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <select id="filterStatus" class="filter-select">
+                            <option value="all">All Status</option>
+                            <option value="open">Open</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                        <button class="btn btn-secondary" id="clearFiltersBtn">Clear</button>
+                    </div>
+                    <a href="report.html" class="btn btn-primary">➕ Report Bug</a>
+                </div>
+            </header>
+
+            <div class="table-container">
+                <table class="issues-table" id="issuesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Assignee</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="issuesList"></tbody>
+                </table>
+                <div id="emptyMessage" class="empty-message" style="display: none;">No bugs found. Create your first bug report!</div>
+            </div>
+
+            <!-- Edit Modal -->
+            <div id="editModal" class="modal">
+                <div class="modal-content">
+                    <span class="modal-close">&times;</span>
+                    <h2>Edit Bug</h2>
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="editTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="editDesc" rows="3"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Priority</label>
+                                <select id="editPriority">
+                                    <option value="critical">Critical</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="editStatus">
+                                    <option value="open">Open</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="resolved">Resolved</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Assignee</label>
+                                <select id="editAssignee">
+                                    <option value="Unassigned">Unassigned</option>
+                                    <option value="Alex">Alex</option>
+                                    <option value="Sarah">Sarah</option>
+                                    <option value="Mike">Mike</option>
+                                    <option value="Emma">Emma</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/data.js"></script>
+    <script src="js/list.js"></script>
+</body>
+</html>

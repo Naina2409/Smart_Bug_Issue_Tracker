@@ -1,0 +1,88 @@
+<!-- index.html - Dashboard -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SMART BUG</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🐛</span>
+                    <span class="logo-text">SMART BUG</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="report.html" class="nav-item">
+                    <span class="nav-icon">➕</span>
+                    <span class="nav-label">Report Bug</span>
+                </a>
+                <a href="board.html" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">Board</span>
+                </a>
+                <a href="list.html" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-label">All Issues</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-info">
+                        <span class="user-name">Demo User</span>
+                        <span class="user-role">Tester</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <div class="header-left">
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle">Bug tracking overview</p>
+                </div>
+                <div class="header-right">
+                    <a href="report.html" class="btn btn-primary">➕ Report Bug</a>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <section class="stats-grid" id="statsContainer">
+                <div class="stat-card">Loading...</div>
+            </section>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                <section class="dashboard-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Bugs</h2>
+                        <a href="list.html" class="card-link">View all →</a>
+                    </div>
+                    <div class="bug-list" id="recentBugsList"></div>
+                </section>
+
+                <section class="dashboard-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Priority Distribution</h2>
+                    </div>
+                    <div class="priority-chart" id="priorityChart"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script src="js/data.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
