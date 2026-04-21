@@ -1,4 +1,3 @@
-<!-- report.html - Report Bug -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +7,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Main App Container - This was missing! -->
     <div class="app-container">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
@@ -33,12 +34,16 @@
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
             <header class="content-header">
-                <h1 class="page-title">Report New Bug</h1>
-                <p class="page-subtitle">Create a detailed bug report</p>
+                <div class="header-left">
+                    <h1 class="page-title">Report New Bug</h1>
+                    <p class="page-subtitle">Create a detailed bug report</p>
+                </div>
             </header>
 
+            <!-- Form Container -->
             <div class="form-container">
                 <form id="bugForm" class="bug-form">
                     <div class="form-group">
@@ -65,7 +70,6 @@
                             </select>
                         </div>
                     </div>
-
                     <div class="form-group">
                         <label for="description">Description *</label>
                         <textarea id="description" name="description" rows="5" required placeholder="Describe the bug, steps to reproduce, expected vs actual behavior..."></textarea>
@@ -91,6 +95,7 @@
             </div>
         </main>
     </div>
+
     <script src="js/data.js"></script>
     <script src="js/report.js"></script>
 </body>
