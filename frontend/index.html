@@ -1,88 +1,228 @@
-<!-- index.html - Dashboard -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | SMART BUG</title>
+    <title>MINI JIRA | Bug Tracker</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar -->
+    <!-- Typewriter Intro Screen -->
+    <div id="introScreen" class="intro-screen">
+        <div class="intro-content">
+            <div class="typewriter-container">
+                <span id="typewriterText" class="typewriter-text"></span>
+                <span class="cursor">|</span>
+            </div>
+            <div class="intro-subtitle">Bug & Issue Tracking System</div>
+        </div>
+    </div>
+
+    <!-- Login Screen (shown after intro) -->
+    <div id="loginScreen" class="login-screen" style="display: none;">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <span class="login-icon">🐛</span>
+                    <h2>MINI JIRA</h2>
+                    <p>Sign in to continue</p>
+                </div>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="demo@minijira.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="••••••" required>
+                    </div>
+                    <button type="submit" class="login-btn">Sign In →</button>
+                </form>
+                <div class="demo-credentials">
+                    <p>Demo Credentials:</p>
+                    <code>demo@minijira.com / any password</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard App (shown after login) -->
+    <div id="mainApp" class="app-container" style="display: none;">
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
                     <span class="logo-icon">🐛</span>
-                    <span class="logo-text">SMART BUG</span>
+                    <span class="logo-text">MINI JIRA</span>
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <a href="index.html" class="nav-item active">
-                    <span class="nav-icon">📊</span>
-                    <span class="nav-label">Dashboard</span>
-                </a>
-                <a href="report.html" class="nav-item">
-                    <span class="nav-icon">➕</span>
-                    <span class="nav-label">Report Bug</span>
-                </a>
-                <a href="board.html" class="nav-item">
-                    <span class="nav-icon">📋</span>
-                    <span class="nav-label">Board</span>
-                </a>
-                <a href="list.html" class="nav-item">
-                    <span class="nav-icon">📝</span>
-                    <span class="nav-label">All Issues</span>
-                </a>
+                <a href="#" class="nav-item active" onclick="showDashboard()">📊 Dashboard</a>
+                <a href="#" class="nav-item" onclick="showReport()">➕ Report Bug</a>
+                <a href="#" class="nav-item" onclick="showBoard()">📋 Board</a>
+                <a href="#" class="nav-item" onclick="showList()">📝 All Issues</a>
             </nav>
             <div class="sidebar-footer">
                 <div class="user-menu">
-                    <div class="user-avatar">👤</div>
+                    <div class="user-avatar" id="userAvatar">👤</div>
                     <div class="user-info">
-                        <span class="user-name">Demo User</span>
+                        <span class="user-name" id="userName">Demo User</span>
                         <span class="user-role">Tester</span>
                     </div>
+                    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="content-header">
-                <div class="header-left">
-                    <h1 class="page-title">Dashboard</h1>
-                    <p class="page-subtitle">Bug tracking overview</p>
-                </div>
-                <div class="header-right">
-                    <a href="report.html" class="btn btn-primary">➕ Report Bug</a>
-                </div>
-            </header>
-
-            <!-- Stats Cards -->
-            <section class="stats-grid" id="statsContainer">
-                <div class="stat-card">Loading...</div>
-            </section>
-
-            <!-- Dashboard Grid -->
-            <div class="dashboard-grid">
-                <section class="dashboard-card">
-                    <div class="card-header">
-                        <h2 class="card-title">Recent Bugs</h2>
-                        <a href="list.html" class="card-link">View all →</a>
+        <main class="main-content" id="mainContent">
+            <!-- Dashboard Content (default) -->
+            <div id="dashboardView">
+                <header class="content-header">
+                    <div class="header-left">
+                        <h1 class="page-title">Dashboard</h1>
+                        <p class="page-subtitle">Bug tracking overview</p>
                     </div>
-                    <div class="bug-list" id="recentBugsList"></div>
-                </section>
-
-                <section class="dashboard-card">
-                    <div class="card-header">
-                        <h2 class="card-title">Priority Distribution</h2>
+                    <div class="header-right">
+                        <button class="btn btn-primary" onclick="showReport()">➕ Report Bug</button>
                     </div>
-                    <div class="priority-chart" id="priorityChart"></div>
-                </section>
+                </header>
+
+                <section class="stats-grid" id="statsContainer"></section>
+
+                <div class="dashboard-grid">
+                    <section class="dashboard-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Recent Bugs</h2>
+                            <button class="card-link" onclick="showList()">View all →</button>
+                        </div>
+                        <div class="bug-list" id="recentBugsList"></div>
+                    </section>
+                    <section class="dashboard-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Priority Distribution</h2>
+                        </div>
+                        <div class="priority-chart" id="priorityChart"></div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Report Bug View (hidden initially) -->
+            <div id="reportView" style="display: none;">
+                <header class="content-header">
+                    <div class="header-left">
+                        <h1 class="page-title">Report New Bug</h1>
+                        <p class="page-subtitle">Create a detailed bug report</p>
+                    </div>
+                </header>
+                <div class="form-container">
+                    <form id="bugForm" class="bug-form">
+                        <div class="form-group">
+                            <label>Bug Title *</label>
+                            <input type="text" id="title" required placeholder="e.g., Login button not responding">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Priority *</label>
+                                <select id="priority" required>
+                                    <option value="critical">🔴 Critical</option>
+                                    <option value="high">🟠 High</option>
+                                    <option value="medium">🟡 Medium</option>
+                                    <option value="low">🟢 Low</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="status">
+                                    <option value="open">Open</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="resolved">Resolved</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description *</label>
+                            <textarea id="description" rows="5" required placeholder="Describe the bug..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Assign To</label>
+                            <select id="assignee">
+                                <option value="Unassigned">Unassigned</option>
+                                <option value="Alex">Alex</option>
+                                <option value="Sarah">Sarah</option>
+                                <option value="Mike">Mike</option>
+                                <option value="Emma">Emma</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="showDashboard()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Submit Bug</button>
+                        </div>
+                    </form>
+                    <div id="formMessage" class="form-message"></div>
+                </div>
+            </div>
+
+            <!-- Board View (hidden initially) -->
+            <div id="boardView" style="display: none;">
+                <header class="content-header">
+                    <h1 class="page-title">Kanban Board</h1>
+                    <p class="page-subtitle">Click on any card to update status</p>
+                </header>
+                <div class="board-container">
+                    <div class="board-column">
+                        <div class="column-header"><h3>🐛 Open</h3><span class="column-count" id="openCount">0</span></div>
+                        <div class="column-cards" id="openColumn"></div>
+                    </div>
+                    <div class="board-column">
+                        <div class="column-header"><h3>⚙️ In Progress</h3><span class="column-count" id="progressCount">0</span></div>
+                        <div class="column-cards" id="progressColumn"></div>
+                    </div>
+                    <div class="board-column">
+                        <div class="column-header"><h3>✅ Resolved</h3><span class="column-count" id="resolvedCount">0</span></div>
+                        <div class="column-cards" id="resolvedColumn"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List View (hidden initially) -->
+            <div id="listView" style="display: none;">
+                <header class="content-header">
+                    <h1 class="page-title">All Issues</h1>
+                    <div class="header-right">
+                        <div class="filter-group">
+                            <select id="filterPriority" class="filter-select">
+                                <option value="all">All Priorities</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            <select id="filterStatus" class="filter-select">
+                                <option value="all">All Status</option>
+                                <option value="open">Open</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                            <button class="btn btn-secondary" id="clearFiltersBtn">Clear</button>
+                        </div>
+                        <button class="btn btn-primary" onclick="showReport()">➕ Report Bug</button>
+                    </div>
+                </header>
+                <div class="table-container">
+                    <table class="issues-table">
+                        <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Assignee</th><th>Created</th><th>Actions</th></tr></thead>
+                        <tbody id="issuesList"></tbody>
+                    </table>
+                    <div id="emptyMessage" class="empty-message" style="display: none;">No bugs found.</div>
+                </div>
             </div>
         </main>
     </div>
+
     <script src="js/data.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/list.js"></script>
+    <script src="js/report.js"></script>
+    <script src="js/intro.js"></script>
 </body>
 </html>

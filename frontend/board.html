@@ -1,4 +1,3 @@
-<!-- board.html - Kanban Board -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,26 +34,28 @@
 
         <main class="main-content">
             <header class="content-header">
-                <h1 class="page-title">Kanban Board</h1>
-                <p class="page-subtitle">Drag and drop to update status</p>
+                <div class="header-left">
+                    <h1 class="page-title">Kanban Board</h1>
+                    <p class="page-subtitle">Drag and drop to update status</p>
+                </div>
             </header>
 
             <div class="board-container">
-                <div class="board-column" data-status="open">
+                <div class="board-column">
                     <div class="column-header">
                         <h3>🐛 Open</h3>
                         <span class="column-count" id="openCount">0</span>
                     </div>
                     <div class="column-cards" id="openColumn"></div>
                 </div>
-                <div class="board-column" data-status="in-progress">
+                <div class="board-column">
                     <div class="column-header">
                         <h3>⚙️ In Progress</h3>
                         <span class="column-count" id="progressCount">0</span>
                     </div>
                     <div class="column-cards" id="progressColumn"></div>
                 </div>
-                <div class="board-column" data-status="resolved">
+                <div class="board-column">
                     <div class="column-header">
                         <h3>✅ Resolved</h3>
                         <span class="column-count" id="resolvedCount">0</span>
@@ -64,6 +65,7 @@
             </div>
         </main>
     </div>
+
     <script src="js/data.js"></script>
     <script src="js/board.js"></script>
 </body>
