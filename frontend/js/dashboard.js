@@ -1,6 +1,5 @@
 /* js/dashboard.js - Dashboard Page Logic */
 
-// Helper function to prevent XSS attacks
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -11,6 +10,8 @@ function escapeHtml(text) {
 function updateDashboard() {
     const stats = getStats();
     const bugs = getBugs();
+    
+    console.log('📊 Dashboard updating with', bugs.length, 'bugs');
     
     // Update stats cards
     const statsContainer = document.getElementById('statsContainer');
@@ -91,5 +92,17 @@ function updateDashboard() {
 
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard page loaded');
+    // Initial update
     updateDashboard();
+    
+    // Also update after 1 second to ensure data is loaded
+    setTimeout(() => {
+        updateDashboard();
+    }, 500);
+    
+    // And again after 2 seconds
+    setTimeout(() => {
+        updateDashboard();
+    }, 1000);
 });

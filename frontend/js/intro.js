@@ -1,4 +1,24 @@
-/* js/intro.js - Complete with Auto-Resolved Bug Detection */
+/* js/intro.js - Clean Version (No Duplicates) */
+
+// ========== USERNAME DISPLAY FUNCTION ==========
+function updateUsernameDisplay() {
+    const userNameSpan = document.getElementById('userName');
+    if (!userNameSpan) return;
+    
+    let username = localStorage.getItem('currentUserName');
+    
+    if (!username) {
+        const email = localStorage.getItem('currentUser');
+        if (email) {
+            username = email.split('@')[0];
+            username = username.charAt(0).toUpperCase() + username.slice(1);
+        } else {
+            username = "Guest";
+        }
+    }
+    
+    userNameSpan.innerHTML = `${username} <span class="demo-bracket">(Demo)</span>`;
+}
 
 // ========== TYPEWRITER FUNCTION ==========
 function startTypewriter() {
@@ -78,315 +98,219 @@ function displayMessages() {
 function clearMessages() {
     localStorage.setItem('activity_messages', '[]');
     displayMessages();
-    addMessage("🧹 Message board cleared", 'info');
 }
 
-// ========== RESOLVED BUG DETECTION & NOTIFICATION ==========
-let lastCheckedBugs = [];
-let resolveMonitorInterval = null;
+// ========== TIME-BASED AUTO RESOLUTION ==========
+let bugReportTimes = {};
 
-function checkForResolvedBugs() {
-    const currentBugs = getBugs();
-    const resolvedBugs = currentBugs.filter(bug => bug.status === 'resolved');
-    const previouslyResolved = lastCheckedBugs.filter(bug => bug.status === 'resolved');
+const RESOLVE_TIMES = {
+    'critical': 30,
+    'high': 45,
+    'medium': 60,
+    'low': 90
+};
+
+let resolvedNotified = {};
+
+function checkAndNotifyResolution() {
+    const bugs = getBugs();
+    const now = new Date();
     
-    // Find newly resolved bugs
-    const newlyResolved = resolvedBugs.filter(resolvedBug => 
-        !previouslyResolved.some(prev => prev.id === resolvedBug.id)
-    );
-    
-    // Notify about newly resolved bugs
-    newlyResolved.forEach(bug => {
-        const message = `✅ RESOLVED: Bug ${bug.id} "${bug.title}" has been fixed by ${bug.assignee || 'the team'}!`;
-        addMessage(message, 'success');
-        showResolvedNotification(bug);
-    });
-    
-    // Also check for critical bugs that need attention
-    const criticalBugs = currentBugs.filter(bug => 
-        bug.priority === 'critical' && 
-        bug.status !== 'resolved'
-    );
-    
-    criticalBugs.forEach(bug => {
-        const bugAge = new Date() - new Date(bug.createdAt);
-        const bugAgeMinutes = Math.floor(bugAge / 60000);
+    bugs.forEach(bug => {
+        if (bug.status === 'resolved') return;
+        if (resolvedNotified[bug.id]) return;
         
-        const recentReminder = JSON.parse(localStorage.getItem('activity_messages') || '[]')
-            .some(msg => msg.text.includes(bug.id) && msg.text.includes('reminder'));
+        let reportTime = bugReportTimes[bug.id];
+        if (!reportTime && bug.createdAt) {
+            reportTime = new Date(bug.createdAt);
+            bugReportTimes[bug.id] = reportTime;
+        }
         
-        if (bugAgeMinutes > 2 && !recentReminder) {
-            addMessage(`🚨 CRITICAL: Bug ${bug.id} "${bug.title}" still unresolved after ${bugAgeMinutes} minutes!`, 'critical');
+        if (!reportTime) return;
+        
+        const elapsedSeconds = Math.floor((now - reportTime) / 1000);
+        const resolveTime = RESOLVE_TIMES[bug.priority] || 60;
+        
+        if (elapsedSeconds >= resolveTime) {
+            resolvedNotified[bug.id] = true;
+            showResolutionPopup(bug, elapsedSeconds);
+            addMessage(`✅ RESOLVED: Bug ${bug.id} "${bug.title}" has been resolved! (Took ${elapsedSeconds} seconds)`, 'success');
         }
     });
-    
-    lastCheckedBugs = JSON.parse(JSON.stringify(currentBugs));
 }
 
-function showResolvedNotification(bug) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = 'resolve-notification';
-    notification.innerHTML = `
-        <div class="resolve-notification-content">
-            <div class="resolve-icon">✅</div>
-            <div class="resolve-text">
-                <strong>Bug Resolved!</strong>
-                <p>${bug.id}: ${bug.title.substring(0, 50)}</p>
-                <small>Resolved by ${bug.assignee || 'Team'} • ${new Date().toLocaleTimeString()}</small>
+function showResolutionPopup(bug, elapsedSeconds) {
+    const priorityEmoji = {
+        'critical': '🔴',
+        'high': '🟠',
+        'medium': '🟡',
+        'low': '🟢'
+    };
+    
+    const popup = document.createElement('div');
+    popup.className = 'resolution-popup';
+    popup.innerHTML = `
+        <div class="resolution-popup-content">
+            <div class="popup-icon">✅</div>
+            <div class="popup-text">
+                <div class="popup-title">${priorityEmoji[bug.priority]} BUG RESOLVED!</div>
+                <div class="popup-bug-id">${bug.id}</div>
+                <div class="popup-bug-title">${bug.title.substring(0, 60)}</div>
+                <div class="popup-details">Auto-resolved after ${elapsedSeconds} seconds | Priority: ${bug.priority.toUpperCase()}</div>
             </div>
-            <button onclick="this.parentElement.parentElement.remove()">✕</button>
+            <button class="popup-close" onclick="this.parentElement.parentElement.remove()">✕</button>
         </div>
     `;
-    document.body.appendChild(notification);
     
-    // Auto remove after 8 seconds
+    document.body.appendChild(popup);
+    
     setTimeout(() => {
-        if (notification && notification.parentElement) {
-            notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.5s';
+        if (popup && popup.parentElement) {
+            popup.style.opacity = '0';
+            popup.style.transform = 'translateX(100px)';
             setTimeout(() => {
-                if (notification && notification.parentElement) notification.remove();
+                if (popup && popup.parentElement) popup.remove();
             }, 500);
         }
     }, 8000);
     
-    // Also update the board if visible
-    if (typeof renderBoard === 'function') renderBoard();
-    if (typeof updateDashboard === 'function') updateDashboard();
-    if (typeof renderIssuesTable === 'function') renderIssuesTable();
-}
-
-function startResolveMonitor() {
-    if (resolveMonitorInterval) clearInterval(resolveMonitorInterval);
-    
-    // Initialize with current bugs
-    lastCheckedBugs = JSON.parse(JSON.stringify(getBugs()));
-    
-    // Check every 8 seconds for resolved bugs
-    resolveMonitorInterval = setInterval(() => {
-        checkForResolvedBugs();
-        // Refresh UI to show updated status
+    setTimeout(() => {
         if (typeof renderBoard === 'function') renderBoard();
         if (typeof updateDashboard === 'function') updateDashboard();
         if (typeof renderIssuesTable === 'function') renderIssuesTable();
-    }, 8000);
+    }, 500);
 }
 
-function stopResolveMonitor() {
-    if (resolveMonitorInterval) {
-        clearInterval(resolveMonitorInterval);
-        resolveMonitorInterval = null;
-    }
-}
-
-// ========== AUTO MESSAGE SIMULATOR ==========
-let autoMessageInterval = null;
-
-function startAutoMessages() {
-    if (autoMessageInterval) clearInterval(autoMessageInterval);
+function showNewBugPopup(bug) {
+    const priorityColors = {
+        'critical': '#ef4444',
+        'high': '#f97316',
+        'medium': '#eab308',
+        'low': '#10b981'
+    };
     
-    autoMessageInterval = setInterval(function() {
-        const bugs = getBugs();
-        const messages = JSON.parse(localStorage.getItem('activity_messages') || '[]');
-        
-        const criticalBugs = bugs.filter(bug => 
-            bug.priority === 'critical' && 
-            bug.status !== 'resolved'
-        );
-        
-        const now = new Date();
-        
-        criticalBugs.forEach(bug => {
-            const bugAge = new Date(now) - new Date(bug.createdAt);
-            const bugAgeMinutes = Math.floor(bugAge / 60000);
-            
-            const recentReminder = messages.some(msg => 
-                msg.text.includes(bug.id) && msg.text.includes('reminder')
-            );
-            
-            if (bugAgeMinutes > 2 && !recentReminder) {
-                addMessage(`🚨 URGENT: Bug ${bug.id} "${bug.title}" is CRITICAL and unresolved!`, 'critical');
-                addMessage(`📢 Assigned to ${bug.assignee || 'Unassigned'} - Please investigate!`, 'critical');
-            }
-        });
-        
-        // Auto-resolve after 5 minutes for demo
-        criticalBugs.forEach(bug => {
-            const bugAge = new Date(now) - new Date(bug.createdAt);
-            const bugAgeMinutes = Math.floor(bugAge / 60000);
-            
-            const alreadyResolvedMsg = messages.some(msg => 
-                msg.text.includes(bug.id) && msg.text.includes('RESOLVED')
-            );
-            
-            if (bugAgeMinutes > 5 && bug.status !== 'resolved' && !alreadyResolvedMsg) {
-                addMessage(`✅ Bug ${bug.id} "${bug.title}" has been auto-resolved!`, 'success');
-                updateBug(bug.id, { status: 'resolved', updatedAt: new Date().toISOString() });
-                if (typeof renderBoard === 'function') renderBoard();
-                if (typeof updateDashboard === 'function') updateDashboard();
-                if (typeof renderIssuesTable === 'function') renderIssuesTable();
-            }
-        });
-    }, 30000);
-}
-
-function stopAutoMessages() {
-    if (autoMessageInterval) {
-        clearInterval(autoMessageInterval);
-        autoMessageInterval = null;
-    }
-}
-
-// ========== MESSAGE FUNCTIONS FOR BUG ACTIONS ==========
-function onBugReported(bug) {
-    const priorityEmoji = {
+    const priorityText = {
         'critical': '🔴 CRITICAL',
         'high': '🟠 HIGH',
         'medium': '🟡 MEDIUM',
         'low': '🟢 LOW'
     };
     
-    addMessage(`🐛 NEW BUG: ${bug.id} "${bug.title}" (${priorityEmoji[bug.priority]})`, 
-               bug.priority === 'critical' ? 'critical' : 'info');
-    addMessage(`📋 Assigned to: ${bug.assignee || 'Unassigned'}`, 'info');
+    const resolveSeconds = RESOLVE_TIMES[bug.priority] || 60;
+    const resolveMinutes = Math.floor(resolveSeconds / 60);
+    const resolveText = resolveSeconds < 60 ? `${resolveSeconds} seconds` : `${resolveMinutes} minute${resolveMinutes > 1 ? 's' : ''}`;
     
-    if (bug.priority === 'critical') {
-        addMessage(`🚨 CRITICAL BUG ALERT! Immediate attention required!`, 'critical');
-    }
-}
-
-function onBugStatusChanged(bugId, oldStatus, newStatus, assignee) {
-    const statusEmoji = {
-        'open': '🟡',
-        'in-progress': '⚙️',
-        'resolved': '✅'
-    };
-    
-    addMessage(`${statusEmoji[newStatus]} Bug ${bugId} status changed: ${oldStatus} → ${newStatus}`, 'info');
-    
-    if (newStatus === 'resolved') {
-        addMessage(`🎉 EXCELLENT! Bug ${bugId} has been RESOLVED by ${assignee || 'Team'}!`, 'success');
-    }
-}
-
-// ========== NOTIFICATION STYLES ==========
-function addNotificationStyles() {
-    if (document.getElementById('notification-styles')) return;
-    
-    const style = document.createElement('style');
-    style.id = 'notification-styles';
-    style.textContent = `
-        .resolve-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
-            animation: slideInRight 0.3s ease;
-            max-width: 350px;
-        }
-        
-        .resolve-notification-content {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-            border-radius: 16px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            border-left: 4px solid #10b981;
-        }
-        
-        .resolve-icon {
-            font-size: 2rem;
-        }
-        
-        .resolve-text {
-            flex: 1;
-        }
-        
-        .resolve-text strong {
-            color: #065f46;
-            font-size: 0.9rem;
-        }
-        
-        .resolve-text p {
-            color: #0f172a;
-            font-size: 0.85rem;
-            margin: 4px 0;
-        }
-        
-        .resolve-text small {
-            color: #047857;
-            font-size: 0.7rem;
-        }
-        
-        .resolve-notification-content button {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            cursor: pointer;
-            color: #065f46;
-            font-weight: bold;
-        }
-        
-        .resolve-notification-content button:hover {
-            opacity: 0.7;
-        }
-        
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(100px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        .message-list {
-            max-height: 250px;
-            overflow-y: auto;
-        }
-        
-        .message-item {
-            padding: 10px 12px;
-            background: #f0f9ff;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-            border-left: 4px solid #0ea5e9;
-            animation: fadeInUp 0.3s ease;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .notification-panel {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 24px;
-            border: 1px solid #bae6fd;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        
-        .notification-panel h3 {
-            margin-bottom: 15px;
-            color: #0c4a6e;
-            font-size: 1.1rem;
-        }
+    const popup = document.createElement('div');
+    popup.className = 'newbug-popup';
+    popup.innerHTML = `
+        <div class="newbug-popup-content" style="border-left-color: ${priorityColors[bug.priority]}">
+            <div class="popup-icon">🐛</div>
+            <div class="popup-text">
+                <div class="popup-title">NEW BUG REPORTED!</div>
+                <div class="popup-bug-id">${bug.id}</div>
+                <div class="popup-bug-title">${bug.title.substring(0, 60)}</div>
+                <div class="popup-details">Priority: ${priorityText[bug.priority]} | Will resolve in ${resolveText}</div>
+            </div>
+            <button class="popup-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+        </div>
     `;
-    document.head.appendChild(style);
+    
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+        if (popup && popup.parentElement) {
+            popup.style.opacity = '0';
+            popup.style.transform = 'translateX(100px)';
+            setTimeout(() => {
+                if (popup && popup.parentElement) popup.remove();
+            }, 500);
+        }
+    }, 6000);
+    
+    addMessage(`🐛 NEW: ${bug.id} "${bug.title}" (${bug.priority.toUpperCase()}) - Will resolve in ${resolveText}`, 
+               bug.priority === 'critical' ? 'critical' : 'info');
+}
+
+function showCriticalAlert(bug) {
+    const popup = document.createElement('div');
+    popup.className = 'critical-popup';
+    popup.innerHTML = `
+        <div class="critical-popup-content">
+            <div class="popup-icon">🚨</div>
+            <div class="popup-text">
+                <div class="popup-title">CRITICAL BUG ALERT!</div>
+                <div class="popup-bug-id">${bug.id}</div>
+                <div class="popup-bug-title">${bug.title.substring(0, 60)}</div>
+                <div class="popup-details">Requires immediate attention! Resolving in ${RESOLVE_TIMES.critical} seconds</div>
+            </div>
+            <button class="popup-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+        if (popup && popup.parentElement) {
+            popup.style.opacity = '0';
+            popup.style.transform = 'translateX(100px)';
+            setTimeout(() => {
+                if (popup && popup.parentElement) popup.remove();
+            }, 500);
+        }
+    }, 7000);
+}
+
+// ========== MONITOR FOR NEW BUGS ==========
+let lastBugList = [];
+
+function checkForNewBugs() {
+    const currentBugs = getBugs();
+    
+    currentBugs.forEach(bug => {
+        const exists = lastBugList.some(prev => prev.id === bug.id);
+        if (!exists) {
+            console.log('New bug detected:', bug.id);
+            bugReportTimes[bug.id] = new Date(bug.createdAt || new Date());
+            showNewBugPopup(bug);
+            
+            if (bug.priority === 'critical') {
+                showCriticalAlert(bug);
+                addMessage(`🚨 CRITICAL: Bug ${bug.id} requires immediate attention!`, 'critical');
+            }
+        }
+    });
+    
+    lastBugList = JSON.parse(JSON.stringify(currentBugs));
+}
+
+// ========== START AUTO-RESOLUTION CHECKER ==========
+let resolutionInterval = null;
+let newBugInterval = null;
+
+function startAutoResolution() {
+    if (resolutionInterval) clearInterval(resolutionInterval);
+    if (newBugInterval) clearInterval(newBugInterval);
+    
+    const currentBugs = getBugs();
+    currentBugs.forEach(bug => {
+        if (bug.status !== 'resolved') {
+            bugReportTimes[bug.id] = new Date(bug.createdAt || new Date());
+        }
+    });
+    lastBugList = JSON.parse(JSON.stringify(currentBugs));
+    
+    resolutionInterval = setInterval(() => {
+        checkAndNotifyResolution();
+    }, 5000);
+    
+    newBugInterval = setInterval(() => {
+        checkForNewBugs();
+    }, 3000);
+}
+
+function stopAutoResolution() {
+    if (resolutionInterval) clearInterval(resolutionInterval);
+    if (newBugInterval) clearInterval(newBugInterval);
 }
 
 // ========== INITIALIZE MESSAGE BOARD ==========
@@ -396,68 +320,45 @@ function initMessageBoard() {
         const messageBoardHTML = `
             <div class="notification-panel">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>📬 Resolved Bugs & Activity Feed</h3>
-                    <button onclick="clearMessages()" style="background: none; border: none; color: #0ea5e9; cursor: pointer; font-size: 0.8rem;">Clear All</button>
+                    <h3>📬 Auto-Resolution Notifications</h3>
+                    <button onclick="clearMessages()" style="background: none; border: none; color: #0ea5e9; cursor: pointer;">Clear</button>
                 </div>
                 <div id="messageList" class="message-list"></div>
-                <div style="margin-top: 10px; font-size: 0.7rem; color: #64748b; display: flex; gap: 15px; flex-wrap: wrap;">
-                    <span>✅ Green = Bug Resolved</span>
-                    <span>🔴 Red = Critical Alert</span>
-                    <span>🔵 Blue = Status Update</span>
-                    <span>⏰ Checks every 8 seconds</span>
+                <div style="margin-top: 10px; font-size: 0.7rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 10px;">
+                    <span>🔴 Critical: 30s</span>
+                    <span>🟠 High: 45s</span>
+                    <span>🟡 Medium: 60s</span>
+                    <span>🟢 Low: 90s</span>
                 </div>
             </div>
         `;
         dashboardView.insertAdjacentHTML('afterbegin', messageBoardHTML);
     }
     displayMessages();
-    addNotificationStyles();
-    startResolveMonitor();
-    startAutoMessages();
+    startAutoResolution();
 }
 
-// ========== INTERCEPT BUG ACTIONS ==========
+// ========== INTERCEPT ADD BUG ==========
 const originalAddBug = window.addBug;
-const originalUpdateBug = window.updateBug;
 
 if (typeof addBug === 'function') {
     window.addBug = function(bugData) {
         const result = originalAddBug(bugData);
-        if (result) onBugReported(result);
-        return result;
-    };
-}
-
-if (typeof updateBug === 'function') {
-    window.updateBug = function(id, updates) {
-        const bugs = getBugs();
-        const oldBug = bugs.find(b => b.id === id);
-        const result = originalUpdateBug(id, updates);
-        
-        if (result && updates.status && oldBug && oldBug.status !== updates.status) {
-            onBugStatusChanged(id, oldBug.status, updates.status, updates.assignee || oldBug.assignee);
-            
-            // If resolved, show immediate notification
-            if (updates.status === 'resolved') {
-                const updatedBug = { ...oldBug, ...updates, id: id };
-                showResolvedNotification(updatedBug);
+        if (result) {
+            bugReportTimes[result.id] = new Date();
+            showNewBugPopup(result);
+            if (result.priority === 'critical') {
+                showCriticalAlert(result);
+                addMessage(`🚨 CRITICAL: Bug ${result.id} "${result.title}" requires immediate attention!`, 'critical');
             }
         }
-        
-        // Refresh UI
-        setTimeout(() => {
-            if (typeof renderBoard === 'function') renderBoard();
-            if (typeof updateDashboard === 'function') updateDashboard();
-            if (typeof renderIssuesTable === 'function') renderIssuesTable();
-        }, 100);
-        
         return result;
     };
 }
 
 // ========== DEMO SCENARIO ==========
 function runDemoScenario() {
-    addMessage("🎬 STARTING DEMO: Critical bug simulation", "success");
+    addMessage("🎬 STARTING DEMO: Testing auto-resolution timeline", "success");
     
     setTimeout(() => {
         const demoBug = {
@@ -465,29 +366,29 @@ function runDemoScenario() {
             priority: "critical",
             status: "open",
             description: "Payment page crashes when users enter card details",
-            assignee: "Sarah"
+            assignee: "Auto-Tester",
+            reporter: "Demo"
         };
         const savedBug = originalAddBug(demoBug);
-        addMessage(`🔴 DEMO: Critical bug ${savedBug.id} created - Payment Gateway Crash`, "critical");
+        addMessage(`🔴 DEMO: Critical bug ${savedBug.id} created - Will auto-resolve in 30 seconds`, "critical");
     }, 1000);
     
     setTimeout(() => {
-        addMessage(`⚙️ Developer Sarah acknowledged and started working on the critical bug`, "info");
-        const bugs = getBugs();
-        const criticalBug = bugs.find(b => b.title?.includes("Payment"));
-        if (criticalBug) originalUpdateBug(criticalBug.id, { status: 'in-progress' });
-    }, 4000);
+        const demoBug2 = {
+            title: "Typo in footer text",
+            priority: "low",
+            status: "open",
+            description: "Footer has a spelling mistake",
+            assignee: "Auto-Tester",
+            reporter: "Demo"
+        };
+        const savedBug2 = originalAddBug(demoBug2);
+        addMessage(`🟢 DEMO: Low priority bug ${savedBug2.id} created - Will auto-resolve in 90 seconds`, "info");
+    }, 3000);
     
     setTimeout(() => {
-        addMessage(`✅ CRITICAL BUG RESOLVED! Fix deployed successfully.`, "success");
-        const bugs = getBugs();
-        const criticalBug = bugs.find(b => b.title?.includes("Payment"));
-        if (criticalBug) originalUpdateBug(criticalBug.id, { status: 'resolved' });
-    }, 7000);
-    
-    setTimeout(() => {
-        addMessage(`🎉 DEMO COMPLETE! Check your board - the bug is now resolved!`, "success");
-    }, 9000);
+        addMessage(`🎯 DEMO: Watch the notifications - bugs will auto-resolve after their time thresholds!`, "success");
+    }, 5000);
 }
 
 function addDemoButton() {
@@ -502,87 +403,12 @@ function addDemoButton() {
     }
 }
 
-// ========== CLEANUP FUNCTION ==========
-function stopAllMonitors() {
-    stopResolveMonitor();
-    stopAutoMessages();
+// ========== CLEANUP ==========
+function cleanup() {
+    stopAutoResolution();
 }
 
-// ========== INITIALIZATION ==========
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - initializing MINI JIRA...');
-    
-    const introScreen = document.getElementById('introScreen');
-    const loginScreen = document.getElementById('loginScreen');
-    const mainApp = document.getElementById('mainApp');
-    
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    const introShown = localStorage.getItem('introShown');
-    
-    // Already logged in - show dashboard
-    if (isLoggedIn === 'true') {
-        if (introScreen) introScreen.style.display = 'none';
-        if (loginScreen) loginScreen.style.display = 'none';
-        if (mainApp) mainApp.style.display = 'flex';
-        if (typeof updateDashboard === 'function') updateDashboard();
-        if (typeof renderBoard === 'function') renderBoard();
-        setTimeout(() => {
-            initMessageBoard();
-            addDemoButton();
-        }, 500);
-        return;
-    }
-    
-    // Intro shown but not logged in - show login
-    if (introShown === 'true') {
-        if (introScreen) introScreen.style.display = 'none';
-        if (loginScreen) loginScreen.style.display = 'flex';
-        if (mainApp) mainApp.style.display = 'none';
-        return;
-    }
-    
-    // First time - show typewriter
-    if (mainApp) mainApp.style.display = 'none';
-    if (loginScreen) loginScreen.style.display = 'none';
-    if (introScreen) introScreen.style.display = 'flex';
-    
-    setTimeout(startTypewriter, 300);
-});
-
-// Login handler
-document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            if (email && password) {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', email);
-                
-                const loginScreen = document.getElementById('loginScreen');
-                const mainApp = document.getElementById('mainApp');
-                
-                if (loginScreen) loginScreen.style.display = 'none';
-                if (mainApp) mainApp.style.display = 'flex';
-                
-                if (typeof updateDashboard === 'function') updateDashboard();
-                if (typeof renderBoard === 'function') renderBoard();
-                
-                setTimeout(() => {
-                    initMessageBoard();
-                    addDemoButton();
-                }, 500);
-            } else {
-                alert('Please enter email and password');
-            }
-        });
-    }
-});
-
-// Navigation functions
+// ========== NAVIGATION FUNCTIONS ==========
 function showDashboard() {
     document.getElementById('dashboardView').style.display = 'block';
     document.getElementById('reportView').style.display = 'none';
@@ -636,7 +462,91 @@ function showList() {
 }
 
 function logout() {
-    stopAllMonitors();
+    cleanup();
     localStorage.clear();
     location.reload();
 }
+
+// ========== INITIALIZATION ==========
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - initializing MINI JIRA...');
+    
+    // Update username display immediately
+    updateUsernameDisplay();
+    
+    const introScreen = document.getElementById('introScreen');
+    const loginScreen = document.getElementById('loginScreen');
+    const mainApp = document.getElementById('mainApp');
+    
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const introShown = localStorage.getItem('introShown');
+    
+    // Already logged in - show dashboard
+    if (isLoggedIn === 'true') {
+        if (introScreen) introScreen.style.display = 'none';
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'flex';
+        if (typeof updateDashboard === 'function') updateDashboard();
+        if (typeof renderBoard === 'function') renderBoard();
+        setTimeout(() => {
+            initMessageBoard();
+            addDemoButton();
+        }, 500);
+        return;
+    }
+    
+    // Intro shown but not logged in - show login
+    if (introShown === 'true') {
+        if (introScreen) introScreen.style.display = 'none';
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (mainApp) mainApp.style.display = 'none';
+        return;
+    }
+    
+    // First time - show typewriter
+    if (mainApp) mainApp.style.display = 'none';
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (introScreen) introScreen.style.display = 'flex';
+    
+    setTimeout(startTypewriter, 300);
+});
+
+// Login handler
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (email && password) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('currentUser', email);
+                
+                let username = email.split('@')[0];
+                username = username.charAt(0).toUpperCase() + username.slice(1);
+                localStorage.setItem('currentUserName', username);
+                
+                // Update username display
+                updateUsernameDisplay();
+                
+                const loginScreen = document.getElementById('loginScreen');
+                const mainApp = document.getElementById('mainApp');
+                
+                if (loginScreen) loginScreen.style.display = 'none';
+                if (mainApp) mainApp.style.display = 'flex';
+                
+                if (typeof updateDashboard === 'function') updateDashboard();
+                if (typeof renderBoard === 'function') renderBoard();
+                
+                setTimeout(() => {
+                    initMessageBoard();
+                    addDemoButton();
+                }, 500);
+            } else {
+                alert('Please enter email and password');
+            }
+        });
+    }
+});
