@@ -87,3 +87,32 @@ function updateBugStatus(bugId, currentStatus) {
 document.addEventListener('DOMContentLoaded', function() {
     renderBoard();
 });
+// In board.js - modify updateBugStatus function
+function updateBugStatus(bugId, currentStatus) {
+    let newStatus = '';
+    const developerName = "Sarah"; // Simulated developer name
+    
+    if (currentStatus === 'open') {
+        newStatus = prompt('Change status to:', 'in-progress');
+        if (newStatus === 'in-progress') {
+            developerUpdatesStatus(bugId, 'in-progress', developerName);
+        }
+    } else if (currentStatus === 'in-progress') {
+        newStatus = prompt('Change status to (open/in-progress/resolved):', 'resolved');
+        if (newStatus === 'resolved') {
+            const bug = getBugs().find(b => b.id === bugId);
+            bugResolved(bugId, bug?.title, developerName);
+        }
+    } else {
+        newStatus = prompt('Change status to (open/in-progress/resolved):', currentStatus);
+    }
+    
+    if (newStatus && ['open', 'in-progress', 'resolved'].includes(newStatus.toLowerCase())) {
+        updateBug(bugId, { status: newStatus.toLowerCase() });
+        renderBoard();
+        if (typeof updateDashboard === 'function') updateDashboard();
+        
+        // Add message about status change
+        addMessage(`🔄 Bug ${bugId} moved from ${currentStatus} to ${newStatus}`, 'info');
+    }
+}

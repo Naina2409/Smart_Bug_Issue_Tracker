@@ -369,6 +369,291 @@ body {
     align-items: center;
     flex-wrap: wrap;
 }
+/* Notification Panel */
+/* ========== MESSAGE BOARD STYLES ========== */
+/* ========== AUTO-RESOLUTION POPUP NOTIFICATIONS ========== */
+/* Add this entire block to your style.css file */
+
+/* Resolution Popup (Bug Resolved) */
+.resolution-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    animation: slideInRight 0.4s ease;
+    max-width: 380px;
+}
+
+.resolution-popup-content {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border-radius: 16px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-left: 5px solid #10b981;
+}
+
+/* New Bug Popup */
+.newbug-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    animation: slideInRight 0.4s ease;
+    max-width: 380px;
+}
+
+.newbug-popup-content {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: 16px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-left: 5px solid #f59e0b;
+}
+
+/* Critical Alert Popup */
+.critical-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    animation: slideInRight 0.4s ease;
+    max-width: 380px;
+}
+
+.critical-popup-content {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border-radius: 16px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-left: 5px solid #ef4444;
+}
+
+/* Common Popup Elements */
+.popup-icon {
+    font-size: 2.2rem;
+}
+
+.popup-text {
+    flex: 1;
+}
+
+.popup-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.resolution-popup .popup-title {
+    color: #065f46;
+}
+
+.newbug-popup .popup-title {
+    color: #92400e;
+}
+
+.critical-popup .popup-title {
+    color: #b91c1c;
+}
+
+.popup-bug-id {
+    font-size: 0.7rem;
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.05);
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+}
+
+.popup-bug-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.popup-details {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.popup-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.popup-close:hover {
+    opacity: 1;
+}
+
+/* Animation */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Multiple popups stacking */
+.resolution-popup:first-child,
+.newbug-popup:first-child,
+.critical-popup:first-child {
+    bottom: 20px;
+}
+
+.resolution-popup:nth-child(2),
+.newbug-popup:nth-child(2),
+.critical-popup:nth-child(2) {
+    bottom: 100px;
+}
+
+.resolution-popup:nth-child(3),
+.newbug-popup:nth-child(3),
+.critical-popup:nth-child(3) {
+    bottom: 180px;
+}
+
+/* ========== MESSAGE BOARD STYLES ========== */
+.message-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.message-item {
+    padding: 10px 12px;
+    background: #f0f9ff;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    border-left: 4px solid #0ea5e9;
+    animation: fadeInUp 0.3s ease;
+    transition: all 0.2s;
+}
+
+.message-item:hover {
+    transform: translateX(5px);
+    background: #e0f2fe;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Notification Panel */
+.notification-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #bae6fd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.notification-panel h3 {
+    margin-bottom: 15px;
+    color: #0c4a6e;
+    font-size: 1.1rem;
+}
+
+/* Auto-resolve timer indicator */
+.auto-resolve-timer {
+    display: inline-block;
+    font-size: 0.7rem;
+    background: #e0f2fe;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+    color: #0369a1;
+}
+
+/* Board Card Enhancement for Auto-Resolved */
+.board-card.auto-resolved {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-left: 3px solid #10b981;
+    animation: glowGreen 0.5s ease;
+}
+
+@keyframes glowGreen {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* Resolved Badge */
+.resolved-badge {
+    display: inline-block;
+    background: #10b981;
+    color: white;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-top: 8px;
+    animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Responsive for mobile */
+@media (max-width: 600px) {
+    .resolution-popup,
+    .newbug-popup,
+    .critical-popup {
+        left: 10px;
+        right: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .resolution-popup-content,
+    .newbug-popup-content,
+    .critical-popup-content {
+        padding: 12px;
+    }
+    
+    .popup-icon {
+        font-size: 1.8rem;
+    }
+    
+    .popup-bug-title {
+        font-size: 0.75rem;
+    }
+}
 
 /* ========== BUTTONS ========== */
 .btn {

@@ -47,3 +47,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+// In report.js - after saving bug
+if (savedBug) {
+    // Add message about new bug
+    addMessage(`🐛 NEW BUG: ${savedBug.id} "${savedBug.title}" reported with ${savedBug.priority} priority`, 'info');
+    addMessage(`📋 Bug ${savedBug.id} assigned to ${savedBug.assignee || 'Unassigned'}`, 'info');
+    
+    // Simulate developer getting notified
+    if (savedBug.assignee !== 'Unassigned') {
+        addMessage(`🔔 Notification sent to ${savedBug.assignee} about ${savedBug.id}`, 'success');
+    }
+    
+    showMessage(`Bug ${savedBug.id} created successfully!`, 'success');
+    // ... rest of code
+}
